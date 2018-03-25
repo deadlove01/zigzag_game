@@ -4,11 +4,14 @@ using UnityEngine;
 
 public class BallPlayerController : MonoBehaviour
 {
-
+    public GameObject goldEffectPrefab;
+    public FloorSpawnManager floorSpawnManager;
     [SerializeField] private float moveSpeed = 1;
 
-
+    private bool isStarted = false;
+    private bool isGameover = false;
     private Rigidbody rigBody;
+ 
     void Awake()
     {
         rigBody = GetComponent<Rigidbody>();
@@ -16,21 +19,52 @@ public class BallPlayerController : MonoBehaviour
 
 	// Use this for initialization
 	void Start () {
-		rigBody.velocity = new Vector3(moveSpeed, 0 ,0);
+		
+	    isStarted = false;
+	    isGameover = false;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	    if (Input.GetMouseButtonDown(0))
+
+	    if (!isStarted)
 	    {
-	        print("change direction");
-	        SwitchDirection();
-	    }
+	        if (Input.GetMouseButtonDown(0))
+	        {
+	            rigBody.velocity = new Vector3(moveSpeed, 0, 0);
+	            isStarted = true;
+                floorSpawnManager.StartSpawnFloors();
+	        }
+        }
+	    else
+	    {
+	        CheckingFallingDown();
+            if (Input.GetMouseButtonDown(0) && !isGameover)
+	        {
+	            SwitchDirection();
+	        }
+        }
+       
+	   
     }
 
     void FixedUpdate()
     {
       
+    }
+
+
+    void CheckingFallingDown()
+    {
+        if (!Physics.Raycast(transform.position, Vector3.down, 1F))
+        {
+            isGameover = true;
+            rigBody.velocity = new Vector3(0, Physics.gravity.y, 0);
+
+            // update camera
+            Camera.main.GetComponent<FollowingCamera>().isGameOver = true;
+            floorSpawnManager.isGameOver = true;
+        }
     }
 
     void SwitchDirection()
@@ -41,6 +75,16 @@ public class BallPlayerController : MonoBehaviour
         }else if (rigBody.velocity.x > 0)
         {
             rigBody.velocity = new Vector3(0, 0, moveSpeed);
+        }
+    }
+
+
+    void OnTriggerEnter(Collider col)
+    {
+        if (col.gameObject.tag == "Gold")
+        {
+            Destroy(col.gameObject);
+            Instantiate(goldEffectPrefab, col.gameObject.transform.position, Quaternion.identity);
         }
     }
 }
