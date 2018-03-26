@@ -34,6 +34,7 @@ public class BallPlayerController : MonoBehaviour
 	            rigBody.velocity = new Vector3(moveSpeed, 0, 0);
 	            isStarted = true;
                 floorSpawnManager.StartSpawnFloors();
+                GameManager.Instance.StartGame();
 	        }
         }
 	    else
@@ -64,6 +65,7 @@ public class BallPlayerController : MonoBehaviour
             // update camera
             Camera.main.GetComponent<FollowingCamera>().isGameOver = true;
             floorSpawnManager.isGameOver = true;
+            GameManager.Instance.EndGame();
         }
     }
 
@@ -85,6 +87,9 @@ public class BallPlayerController : MonoBehaviour
         {
             Destroy(col.gameObject);
             Instantiate(goldEffectPrefab, col.gameObject.transform.position, Quaternion.identity);
+            var point = GameManager.Instance.goldPoint;
+            ScoreManager.Instance.AddMoreScore(point);
+            FloatingTextManager.Instance.CreateFloatingText("+"+point, col.transform);
         }
     }
 }
